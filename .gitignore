@@ -1,3 +1,5 @@
 /.venv
 /dataset/
-/data_clean/
+data_clean/
+__pycache__/
+.ipynb_checkpoints/
