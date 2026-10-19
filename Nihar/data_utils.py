@@ -1,4 +1,5 @@
 import pandas as pd
+from matplotlib import pyplot as plt
 
 LABELS = ["posneg", "vaikeus", "muu"]
 
@@ -70,3 +71,16 @@ def load_clean(path, trim=True):
 
     print(f"{path}: {len(df)} rows")
     return df
+
+def plot_bump(df, center, title, cols=("AccZ", "Pitch(deg)", "GyrY")):
+    part = df[df["Loc(m)"].between(center - 30, center + 50)]
+    fig, axes = plt.subplots(len(cols), 1, figsize=(12, 7), sharex=True)
+    for ax, col in zip(axes, cols):
+        ax.plot(part["Loc(m)"], part[col], linewidth=0.7)
+        ax.fill_between(part["Loc(m)"], 0, 1, where=part["muu"] == 1,
+                        transform=ax.get_xaxis_transform(), color="red", alpha=0.15)
+        ax.set_ylabel(col)
+    axes[0].set_title(title)
+    axes[-1].set_xlabel("Loc (m)")
+    plt.tight_layout()
+    return fig
