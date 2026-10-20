@@ -2,4 +2,5 @@
 /dataset/
 data_clean/
 __pycache__/
+data_features/
 .ipynb_checkpoints/
