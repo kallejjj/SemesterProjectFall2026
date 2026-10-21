@@ -46,3 +46,5 @@
 - **Correlation / phik and multicollinearity** → 04, on window features (all 8 sensors).
 - **Noise filtering** → 04, tested as a feature choice (raw vs. smoothed), because part of the "noise" (shaking) is the signal itself.
 - **Class imbalance (up/down)** → 05, with class weights.
+
+- **Testing strategy:** split by road (train on 2 roads, test on the 3rd, 3 rounds). A random split would put windows of the same bump, and the same bump from other drives, into both training and test (data leakage) and give over-optimistic scores.
