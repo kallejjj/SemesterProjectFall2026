@@ -6,7 +6,7 @@ LABELS = ["posneg", "vaikeus", "muu"]
 FEATURES = ["GyrY_std", "AccZ_std", "GyrX_std", "GyrZ_std",
             "AccY_std", "AccX_std", "Pitch_std", "speed"]
 
-def fix_transitions(s, settle=3, tol=0.1):
+def fix_transitions(s, settle=3, tol=0.02):
     """Give every label transition the value it settles on (method from a friend,
     extended: hovering near a whole number also counts as settled)."""
     result = [None] * len(s)
