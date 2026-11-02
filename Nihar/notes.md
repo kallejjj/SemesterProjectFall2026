@@ -48,3 +48,6 @@
 - **Class imbalance (up/down)** → 05, with class weights.
 
 - **Testing strategy:** split by road (train on 2 roads, test on the 3rd, 3 rounds). A random split would put windows of the same bump, and the same bump from other drives, into both training and test (data leakage) and give over-optimistic scores.
+
+
+- Switched `fix_transitions` to tol = 0.02 (see 02b). All files rebuilt. Effect: 8 Iisingintie edge windows moved from "left out" to "no bump"; RF results unchanged (F1 0.45, AUC 0.76 → 0.77).
