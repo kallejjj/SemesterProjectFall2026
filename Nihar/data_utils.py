@@ -49,8 +49,16 @@ def trim_ends(df, frac=0.8):
     last = fast[::-1].idxmax()
     return df.loc[first:last]
 
+def keep_longest_continuous(df, max_gap_ms=5):
+    """Keep only the longest stretch of rows without a time jump."""
+    gap = df["Timer(ms)"].diff() > max_gap_ms
+    stretch = gap.cumsum()
+    longest = stretch.value_counts().idxmax()
+    return df[stretch == longest]
 
-def load_clean(path, trim=True):
+
+
+def load_clean(path, trim=True, continuous=True):
     # 1. Read the tab-separated file as text, fix decimal commas, turn into numbers
     df = pd.read_csv(path, sep="\t", dtype=str)
     for col in df.columns:
@@ -64,6 +72,7 @@ def load_clean(path, trim=True):
     # 3. Fill the single missing speed value with the average of its neighbours
     df["Speed (m/s)"] = df["Speed (m/s)"].interpolate().bfill()
 
+
     # 4. Speed in km/h, drop the row counter
     df["Speed_kmh"] = df["Speed (m/s)"] * 3.6
     df = df.drop(columns=["Num"])
@@ -71,6 +80,10 @@ def load_clean(path, trim=True):
     # 5. Cut the slow start and end of the drive
     if trim:
         df = trim_ends(df)
+
+    # 6. Keep the longest stretch without time jumps
+    if continuous:
+        df = keep_longest_continuous(df)
 
     print(f"{path}: {len(df)} rows")
     return df
@@ -155,3 +168,4 @@ def make_windows(df, drive, window_m=5):
     w["drive"] = drive
     w["road"] = drive.split("_")[0]
     return w.reset_index()
+
