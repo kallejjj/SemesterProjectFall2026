@@ -125,6 +125,7 @@ def size_group(v):
 
 
 def window_features(g):
+    # Compute features for one window of data. Returns a Series with the features.
     feats = {"speed": g["Speed (m/s)"].mean()}
     for col in SENSORS:
         x = g[col]
@@ -132,6 +133,17 @@ def window_features(g):
         feats[f"{name}_std"] = x.std()
         feats[f"{name}_range"] = x.max() - x.min()
         feats[f"{name}_mean"] = x.mean()
+    # Compute RBCSV features
+    for col in ["RBCSV_60(cf)", "RBCSV_80(cf)"]:
+        x = g[col]
+        name = col.split("(")[0].replace("_", "")
+        feats[f"{name}_mean"] = x.mean()
+        feats[f"{name}_max"] = x.max()
+        feats[f"{name}_std"] = x.std()
+    d = g["RBCSV_80(cf)"] - g["RBCSV_60(cf)"]
+    feats["RBCSV_delta"] = d.mean()
+    feats["RBCSV_delta_absmax"] = d.abs().max()
+    feats["RBCSV_delta_std"] = d.std()
     return pd.Series(feats)
 
 
@@ -161,7 +173,7 @@ def make_windows(df, drive, window_m=5):
     w.loc[w["label"] != "bump", ["vaikeus", "posneg", "size_group"]] = None
 
     # 4. Features
-    feats = df.groupby("window")[SENSORS + ["Speed (m/s)"]].apply(window_features)
+    feats = df.groupby("window")[SENSORS + ["Speed (m/s)", "RBCSV_60(cf)", "RBCSV_80(cf)"]].apply(window_features)
     w = w.join(feats)
 
     # 5. Remember where each window comes from

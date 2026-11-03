@@ -51,3 +51,7 @@
 
 
 - Switched `fix_transitions` to tol = 0.02 (see 02b). All files rebuilt. Effect: 8 Iisingintie edge windows moved from "left out" to "no bump"; RF results unchanged (F1 0.45, AUC 0.76 → 0.77).
+
+- RBCSV (workshop point 1): strong, speed-independent, new info (corr 0.4–0.5 with sensors). Road split: AUC 0.76→0.79 but F1 0.44→0.41 (Kaittiaisentie false alarms up). Random split: F1 0.59→0.66, AUC 0.83→0.88 → leakage inflates both. Main RF stays sensors only (fair comparison with MiniRocket/CNN). Random vs road split done (workshop leakage demo).
+
+- 07 MiniRocket (sktime 1.2.0; sklearn pipeline gave an error → steps written by hand): alpha hit the range edge (1000) → widened to 10⁶ → alpha 10,000. Avg F1 0.40, AUC 0.74 (RF: 0.44 / 0.76). Ranks nearly as well as the RF but more false alarms at the default threshold. Predictions saved.
