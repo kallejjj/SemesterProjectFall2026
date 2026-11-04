@@ -1,0 +1,65 @@
+NOTES FROM THE WORKSHOP
+-----------------------
+This list will expand in the future as more ideas EMERGE.
+
+IDEA 1:
+--------
+Dataframes => current implementation uses separate DataFrames (csv-files~) for train/test/validation.
+
+After doing the timestep-splits (windowing/panels/timesteps etc.) => try placing all subsignals
+into the same pile and mix them all together.
+
+=> After this => train/test/val -split.
+
+NOTE! You can't mix individual points in the sequences, but you can mix the order of the 
+timestep-splitted subsignals.
+
+IDEA 2:
+-------
+
+Feature engineering: what variables to keep, can we combine anything?
+e.g. RBCSV_60(cf) + the 80-variant => calculate the difference of these two
+and place it to a new variable (e,.g. RBCSV_delta)
+
+Or maybe experiment with DFS + RFE to generate new combination variables.
+
+Study correlations/associations (Dython/phik) => are there any variables we can drop?
+
+IDEA 3: 
+-------
+
+Filtering and other similar methods.
+
+It MIGHT be viable to try different filtering methods for the data, e.g.
+- Rolling averages
+- SavGol (Savitzky-Golay)
+- Low Pass Filter 
+- etc.
+
+IDEA => maybe use SavGol/rolling average ONLY on the most fluctuating fields (like Gyros, Acc)
+
+BUT! Based on initial experiments, at least rolling avg, LPF and 
+SavGol only made the model worse.
+
+IDEA 4: Hyperparameter optimizations
+------------------------------------
+
+EXPERIMENT WITH the timestep size (examples are usually 40 steps)
+
+Also, try to change the class weights (it's just a dictionary)
+e.g.  {0: 1, 1: 10}
+
+Also try changing the details in the model / algorithm (neural network etc.)
+
+ALSO: use Keras Tuner and/or Optuna to find best parameters.
+
+IDEA 5: Kaittiaisentie data is a bit different than the rest
+the backfill doesn't work as is there.
+
+You can also attempt solving that in order to use the data like the rest.
+
+IDEA 6: 
+
+There's plenty of tools and models to try with this data - have fun and experiment!
+
+- sktime, CNN/LSTM, etc. etc.
