@@ -58,16 +58,17 @@ def keep_longest_continuous(df, max_gap_ms=5):
 
 
 
-def load_clean(path, trim=True, continuous=True):
+def load_clean(path, trim=True, continuous=True, transfix=True):
     # 1. Read the tab-separated file as text, fix decimal commas, turn into numbers
     df = pd.read_csv(path, sep="\t", dtype=str)
     for col in df.columns:
         df[col] = pd.to_numeric(df[col].str.replace(",", "."), errors="coerce")
 
     # 2. Fix label transitions
-    df[LABELS] = df[LABELS].ffill()
-    for col in LABELS:
-        df[col] = fix_transitions(df[col]).astype(int)
+    if transfix:
+        df[LABELS] = df[LABELS].ffill()
+        for col in LABELS:
+            df[col] = fix_transitions(df[col]).astype(int)
 
     # 3. Fill the single missing speed value with the average of its neighbours
     df["Speed (m/s)"] = df["Speed (m/s)"].interpolate().bfill()
