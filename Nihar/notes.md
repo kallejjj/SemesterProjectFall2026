@@ -57,3 +57,5 @@
 - 07 MiniRocket (sktime 1.2.0; sklearn pipeline gave an error → steps written by hand): alpha hit the range edge (1000) → widened to 10⁶ → alpha 10,000. Avg F1 0.40, AUC 0.74 (RF: 0.44 / 0.76). Ranks nearly as well as the RF but more false alarms at the default threshold. Predictions saved.
 
 - 08 1D CNN (keras): overfits fast; 5 seeds → stable (F1 std ≤ 0.03). Avg F1 0.40, AUC 0.70. Best on sinetänsalmentie (most training data), weakest on Iisingintie (least). All three models end at F1 0.40–0.44 → the limit seems to be the data, not the model. Predictions saved.
+
+- 08 LSTM (3 seeds): avg F1 0.35, AUC 0.69, most false alarms → weakest. Ranking: RF 0.44 > MiniRocket 0.40 = CNN 0.40 > LSTM 0.35. Arsenal skipped for now (same Ridge limits as MiniRocket, slow).
