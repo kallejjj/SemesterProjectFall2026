@@ -55,3 +55,5 @@
 - RBCSV (workshop point 1): strong, speed-independent, new info (corr 0.4–0.5 with sensors). Road split: AUC 0.76→0.79 but F1 0.44→0.41 (Kaittiaisentie false alarms up). Random split: F1 0.59→0.66, AUC 0.83→0.88 → leakage inflates both. Main RF stays sensors only (fair comparison with MiniRocket/CNN). Random vs road split done (workshop leakage demo).
 
 - 07 MiniRocket (sktime 1.2.0; sklearn pipeline gave an error → steps written by hand): alpha hit the range edge (1000) → widened to 10⁶ → alpha 10,000. Avg F1 0.40, AUC 0.74 (RF: 0.44 / 0.76). Ranks nearly as well as the RF but more false alarms at the default threshold. Predictions saved.
+
+- 08 1D CNN (keras): overfits fast; 5 seeds → stable (F1 std ≤ 0.03). Avg F1 0.40, AUC 0.70. Best on sinetänsalmentie (most training data), weakest on Iisingintie (least). All three models end at F1 0.40–0.44 → the limit seems to be the data, not the model. Predictions saved.
