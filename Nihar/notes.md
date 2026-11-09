@@ -59,3 +59,5 @@
 - 08 1D CNN (keras): overfits fast; 5 seeds → stable (F1 std ≤ 0.03). Avg F1 0.40, AUC 0.70. Best on sinetänsalmentie (most training data), weakest on Iisingintie (least). All three models end at F1 0.40–0.44 → the limit seems to be the data, not the model. Predictions saved.
 
 - 08 LSTM (3 seeds): avg F1 0.35, AUC 0.69, most false alarms → weakest. Ranking: RF 0.44 > MiniRocket 0.40 = CNN 0.40 > LSTM 0.35. Arsenal skipped for now (same Ridge limits as MiniRocket, slow).
+
+- 07 closed: Arsenal predictions saved (road split, F1 0.49). Next: 09 comparison (bump level), then 10_arsenal_tuning.
