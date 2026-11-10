@@ -63,3 +63,5 @@
 - 07 closed: Arsenal predictions saved (road split, F1 0.49). Next: 09 comparison (bump level), then 10_arsenal_tuning.
 
 - 05 / 05b: RF on the Jeremy's split. Jeremy's pipeline: Kaittiaisentie 95% accuracy but 0% of bumps found; ours: 88% accuracy, 80% found. m792: ours F1 0.63 vs 0.44. Removing Timer/Loc drops the prof's AUC 0.82 → 0.66 (position leakage). → The RF's strength is the feature engineering.
+
+- 10 tuning so far: neighbours ±2 windows (25 m context) + pitch tilt → F1 0.44 → 0.51, AUC 0.76 → 0.85, false alarm spots at ≥ 90% found 4.84 → 3.23 per km (3-seed avg). ±3 windows loses short bumps. New metric: false alarm *spots* (groups of neighbouring alarm windows). Single runs vary by 1–3 bumps → compare 3-seed averages.
