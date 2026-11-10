@@ -76,7 +76,7 @@ def load_clean(path, trim=True, continuous=True, transfix=True):
 
     # 4. Speed in km/h, drop the row counter
     df["Speed_kmh"] = df["Speed (m/s)"] * 3.6
-    df = df.drop(columns=["Num"])
+    df = df.drop(columns=["Num", "Speed (m/s)"])
 
     # 5. Cut the slow start and end of the drive
     if trim:
