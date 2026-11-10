@@ -61,3 +61,5 @@
 - 08 LSTM (3 seeds): avg F1 0.35, AUC 0.69, most false alarms → weakest. Ranking: RF 0.44 > MiniRocket 0.40 = CNN 0.40 > LSTM 0.35. Arsenal skipped for now (same Ridge limits as MiniRocket, slow).
 
 - 07 closed: Arsenal predictions saved (road split, F1 0.49). Next: 09 comparison (bump level), then 10_arsenal_tuning.
+
+- 05 / 05b: RF on the Jeremy's split. Jeremy's pipeline: Kaittiaisentie 95% accuracy but 0% of bumps found; ours: 88% accuracy, 80% found. m792: ours F1 0.63 vs 0.44. Removing Timer/Loc drops the prof's AUC 0.82 → 0.66 (position leakage). → The RF's strength is the feature engineering.
