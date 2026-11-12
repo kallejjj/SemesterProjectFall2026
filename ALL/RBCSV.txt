@@ -1,0 +1,8 @@
+RBCSV EXPLANATION:
+
+- Two sensors pointing on either side of the road, measuring the angle of the road
+- RBCSV Value is a delta of these, there are a total of 4 sensors (the ones determining RBCSV_60 and the ones determining RBCSV_80)
+- Roads tend to come up in the middle with time, making the shape they are always built in more extreme
+- This measures at what angle the roads go down on the sides
+
+(I hope this makes sense if not I explain Sunday thankubye)
