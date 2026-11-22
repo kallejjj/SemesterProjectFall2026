@@ -166,17 +166,17 @@ def make_windows(df, drive, window_m=5):
     w = w[w["length_m"] >= window_m * 0.9]          # drop incomplete windows
 
     # 3. Label
-    heave = df[df["Frostbumps"]]
+    heave = df[df["Frostbumps"] > 0]
     w["label"] = w["heave_frac"].apply(label_window)
-    w["xy"] = heave.groupby("window")["Frostbumps"].agg(lambda s: s.mode()[0])
+    w["Frostbumps"] = heave.groupby("window")["Frostbumps"].agg(lambda s: s.mode()[0])
     w["size_group"] = w["Frostbumps"].apply(size_group)   # size_group now takes the composite
     w.loc[w["label"] != "bump", ["Frostbumps", "size_group"]] = None
 
     # 4. Features
-    feats = df.groupby("window")[SENSORS + ["speed_kmh", "RBCSV_60(cf)", "RBCSV_80(cf)"]].apply(window_features)
+    OPTIONAL = ["RBCSV_60(cf)", "RBCSV_80(cf)"]
+    columns = SENSORS + ["Speed (m/s)"] + [c for c in OPTIONAL if c in df.columns]
+    feats = df.groupby("window")[columns].apply(window_features)
     w = w.join(feats)
-
-    
 
     # 5. Remember where each window comes from
     w["drive"] = drive
