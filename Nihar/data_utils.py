@@ -182,3 +182,137 @@ def make_windows(df, drive, window_m=5):
     w["road"] = drive.split("_")[0]
     return w.reset_index()
 
+
+def bump_level(p):
+    bumps_total = 0
+    bumps_found = 0
+    real_false_alarms = 0
+    false_alarm_spots = 0
+
+    for drive in p["drive"].unique():
+        # This drive's windows, in road order.
+        d = p[p["drive"] == drive].sort_values("window")
+
+        # --- 1. Group the bump windows into bump passes ---
+        bump_windows = d[d["is_bump"] == 1]["window"].tolist()
+        bumps = []
+        for w in bump_windows:
+            if len(bumps) > 0 and w - bumps[-1][-1] == 1:
+                bumps[-1].append(w)     # next to the previous bump window -> same bump
+            else:
+                bumps.append([w])       # a gap -> a new bump starts
+
+        # --- 2. Was each bump found? ---
+        flagged = d[d["pred"] == 1]["window"].tolist()
+        for bump in bumps:
+            bumps_total = bumps_total + 1
+            for w in bump:
+                if w in flagged:
+                    bumps_found = bumps_found + 1
+                    break
+
+        # --- 3. Real false alarms ---
+        alarms = d[(d["pred"] == 1) & (d["is_bump"] == 0)]["window"].tolist()
+        real_fa_windows = []
+        for a in alarms:
+            near_a_bump = False
+            for b in bump_windows:
+                if abs(a - b) <= 2:
+                    near_a_bump = True
+            if not near_a_bump:
+                real_false_alarms = real_false_alarms + 1
+                real_fa_windows.append(a)
+
+        # --- 4. Group neighbouring false alarm windows into spots ---
+        for i in range(len(real_fa_windows)):
+            if i == 0 or real_fa_windows[i] - real_fa_windows[i - 1] > 1:
+                false_alarm_spots = false_alarm_spots + 1
+
+    km = len(p) * 5 / 1000
+    return {
+        "bumps_total": bumps_total,
+        "bumps_found": bumps_found,
+        "detection_rate": bumps_found / bumps_total,
+        "real_false_alarms": real_false_alarms,
+        "false_alarms_per_km": real_false_alarms / km,
+        "spots_per_km": false_alarm_spots / km,
+    }
+
+
+# ===================== Pipeline for new files (dashboard) =====================
+
+STD_FEATURES = ["GyrY_std", "AccZ_std", "GyrX_std", "GyrZ_std", "AccY_std", "AccX_std", "Pitch_std"]
+
+
+def load_clean_file(file, trim=True, continuous=True):
+    """Same cleaning as load_clean, but works for an uploaded file, and labels are optional."""
+    df = pd.read_csv(file, sep="\t", dtype=str)
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col].str.replace(",", "."), errors="coerce")
+
+    has_labels = True
+    for col in LABELS:
+        if col not in df.columns:
+            has_labels = False
+
+    if has_labels:
+        df[LABELS] = df[LABELS].ffill()
+        for col in LABELS:
+            df[col] = fix_transitions(df[col]).astype(int)
+
+    df["Speed (m/s)"] = df["Speed (m/s)"].interpolate().bfill()
+    df["Speed_kmh"] = df["Speed (m/s)"] * 3.6
+    df = df.drop(columns=["Num"], errors="ignore")
+    if trim:
+        df = trim_ends(df)
+    if continuous:
+        df = keep_longest_continuous(df)
+    return df, has_labels
+
+
+def window_table(df, window_m=5):
+    """5 m windows with the features the final model needs. Labels are added only if present."""
+    df = df.copy()
+    # Cut into 5 m windows, drop incomplete ones, compute features
+    df["window"] = (df["Loc(m)"] // window_m).astype(int)
+
+    rows = []
+    for w, g in df.groupby("window"):
+        length = g["Loc(m)"].max() - g["Loc(m)"].min()
+        if length < window_m * 0.9:
+            continue
+        row = {"window": w, "start_m": g["Loc(m)"].min(), "speed_kmh": g["Speed_kmh"].mean()}
+        for col in ["GyrY", "AccZ", "GyrX", "GyrZ", "AccY", "AccX", "Pitch(deg)"]:
+            name = col.split("(")[0]
+            row[name + "_std"] = g[col].std()
+        row["Pitch_mean"] = g["Pitch(deg)"].mean()
+        if "East(m)" in g.columns:
+            row["east"] = g["East(m)"].mean()
+            row["north"] = g["North(m)"].mean()
+        if "muu" in g.columns:
+            row["heave_frac"] = g["muu"].isin([1, 2]).mean()
+        rows.append(row)
+
+    w = pd.DataFrame(rows)
+    if "heave_frac" in w.columns:
+        w["label"] = w["heave_frac"].apply(label_window)
+    return w
+
+
+def add_model_features(w):
+    """Relative std, pitch tilt, and their neighbours ±1 and ±2 windows (as in notebook 10). One drive at a time."""
+    w = w.sort_values("window").copy()
+
+    for col in STD_FEATURES:
+        w[col + "_rel"] = w[col] / w[col].quantile(0.25)
+    w["Pitch_tilt"] = w["Pitch_mean"] - w["Pitch_mean"].median()
+
+    cols = [col + "_rel" for col in STD_FEATURES] + ["Pitch_tilt"]
+    for shift, name in [(1, "_prev"), (-1, "_next"), (2, "_prev2"), (-2, "_next2")]:
+        other = w[["window"] + cols].copy()
+        other["window"] = other["window"] + shift
+        other = other.rename(columns={col: col + name for col in cols})
+        w = w.merge(other, on="window", how="left")
+        for col in cols:
+            w[col + name] = w[col + name].fillna(w[col])
+    return w
