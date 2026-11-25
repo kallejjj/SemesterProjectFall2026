@@ -69,3 +69,7 @@
 - 10 done: final RF = relative std + neighbours ±2 + pitch tilt, min_samples_leaf 5. Strict (fair threshold) evaluation: before tuning 16.7 → after 10.2 false alarm spots/km, ~99% of bumps found. Optimistic threshold: 2.7 spots/km at ≥ 90% found. Threshold can't be fixed reliably with 3 roads → sensitivity slider in the dashboard.
 
 - Final model saved (models/rf_final.joblib: model + feature list + threshold 0.6). Cross-validated predictions: predictions/predictions_rf_final.csv. Result: 44/48 bumps found (92%), 2.4 false alarm spots/km. Tuning halved false alarm spots (4.8 → 2.4).
+
+- 11 Optuna (RF, 50 trials): shallow trees best (max_depth 5, log2, leaf 6, 500 trees). Strict test: 48/48 found, 4.9 spots/km (was 47.7/48, 8.5). Final model updated; old model kept as backup. Numbers vary ±0.5 spots/km with setup details → report averages.
+
+- FINAL MODEL (11, Optuna settings, threshold 0.65): 44/48 found (92%), 1.8 false alarm spots/km (seed range ~1.8–2.7). Strict: 48/48, 4.9 spots/km. Old notebook-10 model kept as backup.

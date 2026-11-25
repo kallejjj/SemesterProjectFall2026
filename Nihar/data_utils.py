@@ -1,5 +1,6 @@
 import pandas as pd
 from matplotlib import pyplot as plt
+import numpy as np
 
 LABELS = ["posneg", "vaikeus", "muu"]
 
@@ -244,9 +245,10 @@ def bump_level(p):
 STD_FEATURES = ["GyrY_std", "AccZ_std", "GyrX_std", "GyrZ_std", "AccY_std", "AccX_std", "Pitch_std"]
 
 
-def load_clean_file(file, trim=True, continuous=True):
+def load_clean_file(file, trim=True, continuous=True, sep="\t"):
     """Same cleaning as load_clean, but works for an uploaded file, and labels are optional."""
-    df = pd.read_csv(file, sep="\t", dtype=str)
+    df = pd.read_csv(file, sep=sep, dtype=str, encoding="utf-8-sig")
+    df = df.drop(columns=["Unnamed: 0"], errors="ignore")
     for col in df.columns:
         df[col] = pd.to_numeric(df[col].str.replace(",", "."), errors="coerce")
 
@@ -316,3 +318,35 @@ def add_model_features(w):
         for col in cols:
             w[col + name] = w[col + name].fillna(w[col])
     return w
+
+def spots_at_goal(windows, prob, goal=0.9):
+    """False alarm spots per km at the best threshold that still finds `goal` of the bumps.
+    Returns 100 if no threshold reaches the goal (a penalty)."""
+    p = windows[["drive", "window", "is_bump"]].copy()
+    p["prob"] = prob
+    best = 100.0
+    for t in np.arange(0.05, 1.0, 0.05):
+        p["pred"] = (p["prob"] >= t).astype(int)
+        b = bump_level(p)
+        if b["detection_rate"] >= goal and b["spots_per_km"] < best:
+            best = b["spots_per_km"]
+    return best
+
+def threshold_at_goal(windows, prob, goal=0.9):
+    """The threshold with the fewest false alarm spots that still finds `goal` of the bumps (0.05 if none does)."""
+    p = windows[["drive", "window", "is_bump"]].copy()
+    p["prob"] = prob
+    best_spots = None
+    best_t = 0.05
+    for t in np.arange(0.05, 1.0, 0.05):
+        p["pred"] = (p["prob"] >= t).astype(int)
+        b = bump_level(p)
+        if b["detection_rate"] >= goal and (best_spots is None or b["spots_per_km"] < best_spots):
+            best_spots = b["spots_per_km"]
+            best_t = t
+    return best_t
+
+def detect_separator(first_line):
+    """Guess the column separator from the header line: tab, semicolon or comma."""
+    counts = {"\t": first_line.count("\t"), ";": first_line.count(";"), ",": first_line.count(",")}
+    return max(counts, key=counts.get)

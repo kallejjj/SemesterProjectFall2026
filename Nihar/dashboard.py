@@ -7,7 +7,7 @@ from matplotlib.patches import Patch
 import streamlit as st
 import pydeck as pdk
 from pyproj import Transformer
-from data_utils import bump_level, load_clean_file, window_table, add_model_features
+from data_utils import bump_level, load_clean_file, window_table, add_model_features, detect_separator
 
 st.set_page_config(page_title="Frost heave detection", layout="wide")
 
@@ -29,7 +29,9 @@ def get_transformer():
 @st.cache_data
 def process_file(file_bytes):
     raw_rows = file_bytes.count(b"\n") - 1
-    df_clean, has_labels = load_clean_file(io.BytesIO(file_bytes))
+    first_line = file_bytes.split(b"\n")[0].decode("utf-8", errors="ignore")
+    sep = detect_separator(first_line)
+    df_clean, has_labels = load_clean_file(io.BytesIO(file_bytes), sep=sep)
     w = add_model_features(window_table(df_clean))
     return raw_rows, df_clean, w, has_labels
 
@@ -65,12 +67,13 @@ saved = load_model()
 
 
 # ---------- Sidebar: sensitivity ----------
+t0 = saved["threshold"]
 SENSITIVITY = {
-    "Very careful": 0.80,
-    "Careful": 0.70,
-    "Balanced (recommended)": saved["threshold"],
-    "Sensitive": 0.45,
-    "Very sensitive": 0.30,
+    "Very careful": min(t0 + 0.2, 0.95),
+    "Careful": min(t0 + 0.1, 0.95),
+    "Balanced (recommended)": t0,
+    "Sensitive": max(t0 - 0.1, 0.05),
+    "Very sensitive": max(t0 - 0.2, 0.05),
 }
 
 st.sidebar.header("Settings")
@@ -95,13 +98,19 @@ tab_check, tab_results = st.tabs(["Check a drive", "Test results"])
 # ---------- Tab 1: Check a drive ----------
 with tab_check:
     uploaded = st.file_uploader("Upload a drive file (tab-separated .txt, same format as the project data)",
-                                type=["txt"])
+                                type=["txt", "csv"])
 
     if uploaded is None:
         st.info("Upload a drive file to start.")
     else:
         with st.spinner("Cleaning the data and checking the road..."):
-            raw_rows, df_clean, w, has_labels = process_file(uploaded.getvalue())
+            try:
+                raw_rows, df_clean, w, has_labels = process_file(uploaded.getvalue())
+            except Exception as error:
+                st.error("This file could not be read. It needs the same columns as the project data, "
+                        "for example Timer(ms), Loc(m), Speed (m/s), AccX–AccZ, GyrX–GyrZ and Pitch(deg). "
+                        f"Details: {error}")
+                st.stop()
 
         # Choose the model: for project roads, the version that never saw that road
         road = uploaded.name.split("_")[0]
